@@ -17,7 +17,7 @@
 ;      surfaces as a confusing permission error halfway through their work.
 
 #define AppName        "Document Extractor"
-#define AppVersion     "1.0.0"
+#define AppVersion     "1.0.1"
 #define AppPublisher   "Your Company Name"
 #define AppExeName     "DocumentExtractor.exe"
 #define SourceDir      "..\dist\DocumentExtractor"

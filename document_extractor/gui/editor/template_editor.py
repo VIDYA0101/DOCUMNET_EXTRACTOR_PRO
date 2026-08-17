@@ -396,7 +396,7 @@ class TemplateEditor(QWidget):
                 spec["strategies"][0]["value_window"]["direction"] = direction
         self.lbl_preview.setText(text or "(nothing in this box - field kept as before)")
 
-
+    def _guess_vendor(self, page) -> None:
         for line in page.lines[:4]:
             text = line.text.strip()
             if len(text) > 4 and any(c.isalpha() for c in text):

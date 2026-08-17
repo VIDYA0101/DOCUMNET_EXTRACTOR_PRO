@@ -27,18 +27,42 @@ where py >nul 2>nul && set "PY=py -3"
 if not defined PY (
     where python >nul 2>nul && set "PY=python"
 )
-if not defined PY (
-    echo ERROR: No Python found on PATH.
+
+REM A brand new Windows machine ships fake python.exe / python3.exe files
+REM that "where" finds successfully - they exist as real files - but that
+REM only print a message about installing from the Microsoft Store rather
+REM than running Python at all. Checking that --version actually returns a
+REM real version number, not just that some file by that name exists,
+REM catches this before it causes a confusing failure two steps later.
+set "REAL_PYTHON=0"
+set "PYVER="
+if defined PY (
+    for /f "delims=" %%v in ('%PY% --version 2^>^&1') do if not defined PYVER set "PYVER=%%v"
+    echo !PYVER! | findstr /b /c:"Python 3." >nul
+    if not errorlevel 1 set "REAL_PYTHON=1"
+)
+
+if "!REAL_PYTHON!"=="0" (
     echo.
-    echo Install Python 3.11 or 3.12 from:
+    echo ERROR: No real Python found on this machine.
+    echo.
+    if defined PY (
+        echo Found something claiming to be Python, but running it did not
+        echo return a real version number - very likely Windows' own fake
+        echo "python.exe" answering instead, which happens on any machine
+        echo that has never had Python installed.
+        echo    What it actually printed: !PYVER!
+        echo.
+    )
+    echo Install Python 3.12 from:
     echo    https://www.python.org/downloads/windows/
-    echo Tick "Add python.exe to PATH" during installation.
+    echo Tick "Add python.exe to PATH" on the FIRST screen of the installer -
+    echo this step is easy to miss and everything else here depends on it.
     pause
     exit /b 1
 )
 
-for /f "tokens=2" %%v in ('%PY% --version 2^>^&1') do set PYVER=%%v
-echo Using Python %PYVER%
+echo Using !PYVER!
 
 REM --- Environment ------------------------------------------------------
 REM A separate venv from .venv-build, so the two cannot interfere with

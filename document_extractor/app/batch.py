@@ -24,7 +24,7 @@ from ..infra.store import AppendLog, AtomicJson
 
 log = logging.getLogger(__name__)
 
-APP_VERSION = "1.0.0-mvp"
+APP_VERSION = "1.0.1-mvp"   # bumped: fixes the _guess_vendor crash
 
 
 @dataclass
