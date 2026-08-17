@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "template_id": "acme_industries__invoice",
+  "version": 1,
+  "document_type": "invoice",
+  "dayfirst": true,
+  "date_formats": ["%d/%m/%Y", "%d-%m-%Y", "%d %b %Y", "%Y-%m-%d"],
+  "vendor": {
+    "display_name": "ACME INDUSTRIES PVT LTD",
+    "slug": "acme_industries",
+    "aliases": ["ACME Industries", "ACME IND"],
+    "identifiers": { "gstin": "29AABCA1234A1ZF" }
+  },
+  "fingerprint": {
+    "required_tokens": ["ACME INDUSTRIES", "TAX INVOICE"],
+    "forbidden_tokens": ["PROFORMA", "DELIVERY CHALLAN", "CREDIT NOTE"],
+    "min_score": 0.72,
+    "review_below": 0.85
+  },
+  "fields": [
+    {
+      "name": "vendor_name", "label": "Vendor Name", "data_type": "string",
+      "required": true,
+      "strategies": [{ "type": "constant", "value": "ACME INDUSTRIES PVT LTD" }]
+    },
+    {
+      "name": "gst_number", "label": "GST Number", "data_type": "string",
+      "required": true,
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "GSTIN", "match": "contains", "occurrence": "first",
+                    "search_scope": { "page": 1,
+                                      "region_norm": [0.0, 0.0, 0.6, 0.15] } },
+        "value_window": { "direction": "right", "max_distance_pt": 160 },
+        "pattern": "[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]",
+        "post": ["remove_spaces", "upper"]
+      }],
+      "validators": [{ "type": "checksum", "algorithm": "gstin" }]
+    },
+    {
+      "name": "invoice_number", "label": "Invoice Number", "data_type": "string",
+      "required": true, "unique_key": true,
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "Invoice No", "match": "fuzzy", "min_ratio": 0.85,
+                    "occurrence": "first", "search_scope": { "page": 1 } },
+        "value_window": { "direction": "right", "max_distance_pt": 220,
+                          "vertical_tolerance_pt": 6,
+                          "stop_at_anchor": ["Invoice Date", "PO Number"] },
+        "pattern": "[A-Z]{2,4}[/-][0-9]{4}[/-][0-9]{3,6}",
+        "post": ["strip", "collapse_ws", "upper"]
+      }],
+      "validators": [{ "type": "length", "min": 6, "max": 24 }]
+    },
+    {
+      "name": "invoice_date", "label": "Invoice Date", "data_type": "date",
+      "required": true,
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "Invoice Date", "match": "fuzzy",
+                    "search_scope": { "page": 1 } },
+        "value_window": { "direction": "right", "max_distance_pt": 200,
+                          "stop_at_anchor": ["PO Number"] },
+        "pattern": "\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}"
+      }],
+      "validators": [{ "type": "range", "min": "-5y", "max": "+1y" }]
+    },
+    {
+      "name": "po_number", "label": "PO Number", "data_type": "string",
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "PO Number", "match": "fuzzy",
+                    "search_scope": { "page": 1 } },
+        "value_window": { "direction": "right", "max_distance_pt": 200 },
+        "pattern": "PO-[A-Z]{2,4}-\\d{3,6}"
+      }]
+    },
+    {
+      "name": "customer_name", "label": "Customer Name", "data_type": "string",
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "Bill To", "match": "fuzzy",
+                    "search_scope": { "page": 1 } },
+        "value_window": { "direction": "below", "max_distance_pt": 120,
+                          "max_below_pt": 18,
+                          "stop_at_anchor": ["GSTIN", "Invoice"] },
+        "pattern": "[A-Z][A-Z &.]{4,60}(?:LLP|LTD|LIMITED|PVT|INC|CO)?"
+      }]
+    },
+    {
+      "name": "subtotal", "label": "Sub Total", "data_type": "decimal",
+      "required": true,
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "Sub Total", "match": "fuzzy", "occurrence": "first" },
+        "value_window": { "direction": "right", "max_distance_pt": 260 },
+        "pattern": "[\\d,]+\\.\\d{2}",
+        "post": ["strip_currency", "strip"]
+      }],
+      "validators": [{ "type": "range", "min": 0, "max": 100000000 }]
+    },
+    {
+      "name": "tax_total", "label": "Tax Total", "data_type": "decimal",
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "IGST", "match": "contains", "occurrence": "first" },
+        "value_window": { "direction": "right", "max_distance_pt": 260 },
+        "pattern": "[\\d,]+\\.\\d{2}",
+        "post": ["strip_currency", "strip"]
+      }]
+    },
+    {
+      "name": "grand_total", "label": "Grand Total", "data_type": "decimal",
+      "required": true,
+      "strategies": [{
+        "type": "anchor_relative",
+        "anchor": { "text": "Grand Total", "match": "fuzzy", "occurrence": "last" },
+        "value_window": { "direction": "right", "max_distance_pt": 260 },
+        "pattern": "[\\d,]+\\.\\d{2}",
+        "post": ["strip_currency", "strip"]
+      }],
+      "validators": [{ "type": "range", "min": 0, "max": 100000000 }]
+    }
+  ],
+  "tables": [
+    {
+      "name": "line_items",
+      "start": {
+        "type": "header_row",
+        "header_tokens": ["Sr", "Description", "HSN", "Qty", "Rate", "Amount"],
+        "min_tokens_matched": 4, "match": "fuzzy"
+      },
+      "end": {
+        "type": "any_of",
+        "conditions": [
+          { "type": "anchor", "text": ["Sub Total", "Total", "Taxable Value"] },
+          { "type": "page_end" }
+        ]
+      },
+      "columns": [
+        { "name": "sr_no",       "x_range_norm": [0.055, 0.150], "type": "int" },
+        { "name": "description", "x_range_norm": [0.150, 0.430], "type": "string",
+          "required": true, "multiline": true },
+        { "name": "hsn",         "x_range_norm": [0.430, 0.530], "type": "string" },
+        { "name": "quantity",    "x_range_norm": [0.530, 0.620], "type": "decimal",
+          "align": "right" },
+        { "name": "unit_price",  "x_range_norm": [0.620, 0.740], "type": "decimal",
+          "align": "right" },
+        { "name": "amount",      "x_range_norm": [0.740, 0.930], "type": "decimal",
+          "align": "right", "required": true }
+      ],
+      "row_grouping": {
+        "strategy": "anchor_column",
+        "anchor_columns": ["sr_no", "amount"],
+        "y_tolerance_pt": 3, "wrapped_lines": "append_to_previous"
+      },
+      "multipage": { "continues": true, "repeat_header": true },
+      "row_filters": {
+        "drop_if_matches": ["^Sub ?Total", "^Grand Total", "^IGST", "^CGST",
+                            "^SGST", "^Round", "^Terms"]
+      }
+    }
+  ],
+  "cross_checks": [
+    { "id": "line_sum_vs_subtotal",
+      "expr": "abs(sum(lines.amount) - subtotal) <= max(1.0, 0.005 * subtotal)",
+      "on_fail": "review" },
+    { "id": "grand_total",
+      "expr": "abs(subtotal + tax_total - grand_total) <= max(1.0, 0.005 * grand_total)",
+      "on_fail": "review" }
+  ],
+  "output": {
+    "sheet_group": "invoice",
+    "column_order": ["invoice_number", "invoice_date", "po_number",
+                     "customer_name", "subtotal", "tax_total", "grand_total"]
+  }
+}

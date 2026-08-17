@@ -1,0 +1,24 @@
+# Runtime dependencies.
+#
+# Licensing note: PyMuPDF (fitz) is deliberately absent. It is AGPL-3.0, and
+# linking it into a distributed application obliges you to release this
+# application's source under the AGPL too. pypdfium2 (BSD-3/Apache-2.0) and
+# pdfplumber (MIT) cover the same ground with no such obligation.
+#
+# PySide6 is LGPL-3.0. Dynamic linking is fine for a commercial product, but
+# you must ship the licence text and allow users to substitute their own Qt
+# build. The LICENSES/ folder and the About dialog handle this.
+
+PySide6==6.7.2
+pdfplumber==0.11.4
+pypdfium2==4.30.0
+pypdf==5.1.0
+openpyxl==3.1.5
+pytesseract==0.3.13
+pydantic==2.9.2
+rapidfuzz==3.10.1
+python-dateutil==2.9.0.post0
+Pillow==10.4.0
+
+# Build-time only
+pyinstaller==6.11.0

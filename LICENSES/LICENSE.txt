@@ -1,0 +1,7 @@
+Copyright (c) 2026 Your Company Name
+
+Replace this file with your own licence or end-user agreement before
+distributing. Inno Setup displays it during installation.
+
+This application incorporates third-party components under their own licences.
+See THIRD_PARTY_NOTICES.md in this folder.

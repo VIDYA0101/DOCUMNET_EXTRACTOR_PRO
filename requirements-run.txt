@@ -1,0 +1,20 @@
+# Dependencies needed to RUN the application from source.
+#
+# Deliberately excludes pyinstaller: that is only needed to package an EXE,
+# and packaging is exactly the step that is skipped when running this way.
+#
+# Versions are left unpinned here, unlike requirements.txt. Running from
+# source only needs a working combination on this machine, not a byte-for-byte
+# reproducible build, and unpinned installs are far less likely to fail
+# because one exact wheel is unavailable for a particular Python version.
+
+PySide6
+pdfplumber
+pypdfium2
+pypdf
+openpyxl
+pytesseract
+pydantic>=2
+rapidfuzz
+python-dateutil
+Pillow
